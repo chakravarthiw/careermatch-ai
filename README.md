@@ -18,6 +18,14 @@ It helps job seekers track applications, detect visa sponsorship signals, extrac
 
 ---
 
+## 💡 Why I Built This
+
+As an international graduate in Australia, I wanted a practical tool to manage job applications, identify sponsorship-friendly roles, and avoid missing application deadlines.
+
+This project also demonstrates my skills in Python, data handling, text processing, product thinking, and Git-based development.
+
+---
+
 ## 🛠️ Tech Stack
 
 - Python
@@ -26,6 +34,15 @@ It helps job seekers track applications, detect visa sponsorship signals, extrac
 - openpyxl
 - Regex
 - Git + GitHub
+
+---
+
+## 🗺️ Roadmap
+Phase 1: Application tracker, sponsorship detection, closing date extraction, dashboard
+Phase 2: ATS keyword matching and resume-job fit score
+Phase 3: Job link discovery using search APIs
+Phase 4: AI-assisted resume and cover letter tailoring
+Phase 5: Streamlit Cloud deployment and screenshots
 
 ---
 
@@ -59,21 +76,4 @@ careermatch-ai/
 ├── resumes/     # Local resume files ignored by Git
 └── docs/        # Screenshots and documentation
 
-🗺️ Roadmap
-Phase 1: Application tracker, sponsorship detection, closing date extraction, dashboard
-Phase 2: ATS keyword matching and resume-job fit score
-Phase 3: Job link discovery using search APIs
-Phase 4: AI-assisted resume and cover letter tailoring
-Phase 5: Streamlit Cloud deployment and screenshots
 
-💡 Why I Built This
-
-As an international graduate in Australia, I wanted a practical tool to manage job applications, identify sponsorship-friendly roles, and avoid missing application deadlines.
-
-This project also demonstrates my skills in Python, data handling, text processing, product thinking, and Git-based development.
-
-👤 Author
-
-Chakravarthi Waghulabaranan
-Master of Data Science, RMIT University
-Melbourne, Australia
