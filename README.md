@@ -38,11 +38,11 @@ This project also demonstrates my skills in Python, data handling, text processi
 ---
 
 ## 🗺️ Roadmap
-Phase 1: Application tracker, sponsorship detection, closing date extraction, dashboard
-Phase 2: ATS keyword matching and resume-job fit score
-Phase 3: Job link discovery using search APIs
-Phase 4: AI-assisted resume and cover letter tailoring
-Phase 5: Streamlit Cloud deployment and screenshots
+- Phase 1: Application tracker, sponsorship detection, closing date extraction, dashboard
+- Phase 2: ATS keyword matching and resume-job fit score
+- Phase 3: Job link discovery using search APIs
+- Phase 4: AI-assisted resume and cover letter tailoring
+- Phase 5: Streamlit Cloud deployment and screenshots
 
 ---
 
