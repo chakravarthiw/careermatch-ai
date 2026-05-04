@@ -8,10 +8,12 @@
 # ─────────────────────────────────────────────────────────────
 import streamlit as st 
 import pandas as pd
+from datetime import datetime
+from datetime import date
 
 #import modules from src/ folder
 from src.tracker import load_tracker, save_tracker, add_job, update_status, STATUSES, COLUMNS
-from src.utils import days_until, urgency_label, sponsorship_label
+from src.utils import days_until, urgency_label, sponsorship_label, extract_closing_date
 
 # ── Page Configuration ────────────────────────────────────────
 # # First streamlit call in scrit 
@@ -45,6 +47,42 @@ tabs = st.tabs([
 with tabs[0]:
     st.header("Add a New Job")
 
+    st.subheader("Step 1 - Paste Job Description")
+    st.caption("Sponsorship and Closing Date Auto Generated")
+
+    
+    job_description = st.text_area(
+        "PASTE JOB DESCRIPTION HERE",
+        height = 400
+    )
+
+
+    # Run detection as soon as text is parsed
+    detected_sponsorship = sponsorship_label(job_description)
+    detected_closing_date = extract_closing_date(job_description)
+
+
+    # Colour coded feedback immediately
+    if job_description:
+        col_a, col_b = st.columns(2)
+        with col_a:
+            if detected_closing_date:
+                st.success(f"📅 Closing date detected: **{detected_closing_date}**")
+            else:
+                st.warning("📅 No closing date found — enter manually below.")
+        with col_b:
+            if detected_sponsorship == "Likely Sponsorship":
+                st.success(f"🛂 Sponsorship: **{detected_sponsorship}**")
+            elif detected_sponsorship == "No Sponsorship":
+                st.error(f"🛂 Sponsorship: **{detected_sponsorship}**")
+            else:
+                st.warning(f"🛂 Sponsorship: **{detected_sponsorship}**")
+    
+    
+    st.divider()
+    st.subheader("STEP 2 - Fill Job Details Manually")
+    
+    
     # st.columns(2) -> splits layout into two equal side-by-side COLUMNS
     # this keeps the form compact rather than a vertical list
 
@@ -66,14 +104,19 @@ with tabs[0]:
             "Full-time", "Part-time", "Casual", "Contract", "Internship"
         ])
         salary = st.text_input("Salary / Rate(optional)")
-        closing_date = st.date_input("Closing Date")
+        
 
-        # the job description is used ONLY for sponsorship detection at this stage
-        # in phase 2-> will be used for ATS keyword matching
-        job_description = st.text_area(
-            "Paste Job Description - Sponsorship Detection Purpose",
-            height = 150
-        )
+
+        if detected_closing_date:
+            try:
+                default_date = datetime.strptime(detected_closing_date, "%Y-%m-%d").date()
+            except ValueError:
+                default_date = date.today()
+        else:
+            default_date = date.today()
+        closing_date = st.date_input("Closing Date", value = default_date)
+
+        
     notes = st.text_area("Notes")
 
     # ── Save Button ───────────────────────────────────────────
@@ -128,11 +171,13 @@ with tabs[1]:
         # ── Filters ───────────────────────────────────────────
         # Multiselect lets the user show/hide rows by status and sponsorship
         # default = show all rows
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             status_filter = st.multiselect("Filter by Status",
                                            options = STATUSES,
                                            default = STATUSES)
+        
+        
         
         with col2:
             sponsorship_filter = st.multiselect(
@@ -141,6 +186,10 @@ with tabs[1]:
                 default = ["No Sponsorship", "Not Mentioned", "Unknown", "Likely Sponsorship"]
             )
 
+
+            with col3:
+                search_text = st.text_input("🔍 Search Job / Company")
+
         # Apply both filters using boolean indexing
         # .isin() check if row value in selected list
         filtered = df[
@@ -148,6 +197,17 @@ with tabs[1]:
             &
             df["Sponsorship"].isin(sponsorship_filter)
         ]
+
+
+        # Apply text search across Job Title and Company Columns
+        # .str.contains() checks if search text appears anywhere in the value
+        if search_text:
+            search_lower = search_text.lower()
+            filtered = filtered[
+                filtered["Job Title"].astype(str).str.lower().str.contains(search_lower) |
+                filtered["Company"].astype(str).str.lower().str.contains(search_lower)
+            ]
+        st.caption(f"Showing **{len(filtered)}** of **{len(df)}** jobs")
 
         # render the filtered dataframe as interactive table
         st.dataframe(filtered, use_container_width = True, height = 400)
@@ -172,14 +232,15 @@ with tabs[1]:
                 st.rerun() #refresh page to update table dynamically
             
 
-            # ── Inline Status Update ──────────────────────────────
-            # Converts filtered dataframe to CSV and gives download option
-            # only current filtered view is exported - not full excel dataframe
-            st.download_button(
-                label = "⬇️ Download as CSV",
-                data = filtered.to_csv(index=False),
-                file_name = "careermatch_tracker.csv",
-                mime = "text/csv"
+        st.divider()
+        # ── Inline Status Update ──────────────────────────────
+        # Converts filtered dataframe to CSV and gives download option
+        # only current filtered view is exported - not full excel dataframe
+        st.download_button(
+            label = "⬇️ Download as CSV",
+            data = filtered.to_csv(index=False),
+            file_name = "careermatch_tracker.csv",
+            mime = "text/csv"
             )
 
 
