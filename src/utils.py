@@ -135,12 +135,14 @@ def extract_closing_date(job_description: str) -> str:
     # We only looking for dates following one of these phrases
     # re.IGNORECASE makes it case insensitive so "Apply By" also matches
     anchor_patterns = [
-        r"applications?\s+close[sd]?\s+(?:on\s+)?(.+)",
-        r"closing\s+date[:\s]+(.+)",
-        r"apply\s+by[:\s]+(.+)",
-        r"closes[:\s]+(.+)",
-        r"application\s+deadline[:\s]+(.+)"
-    ]
+    r"applications?\s+close[sd]?\s*[:\-]?\s*(?:on\s+)?(.+)",
+    r"closing\s+date\s*[:\-]?\s*(.+)",
+    r"apply\s+by\s*[:\-]?\s*(.+)",
+    r"closes\s*[:\-]?\s*(.+)",
+    r"application\s+deadline\s*[:\-]?\s*(.+)",
+    r"deadline\s*[:\-]?\s*(.+)",
+    r"apply\s+before\s*[:\-]?\s*(.+)",
+]
 
 
     # Month name to number lookup
@@ -168,12 +170,19 @@ def extract_closing_date(job_description: str) -> str:
 
 
         # Stripping Punctuations and spaces 
-        raw = raw.strip("., ")
+        raw = raw.strip(".,: ")
 
 
         # Handles different newline types -> \n, \r\n, \r
         # [0] - takes only the first line - so that unrelated text not parsed
-        raw = raw.splitlines()[0].strip()
+        # raw = raw.splitlines()[0].strip()
+        lines = [line.strip() for line in raw.splitlines() if line.strip()]
+        raw = lines[0] if lines else ""
+        if not raw:
+            return ""
+        
+        # Keep only the likely date section, so extra description text does not confuse parsing
+        raw = raw[:40]
 
 
         # PATTERN 1:  DD Month YYYY - eg: 20 May 2025
