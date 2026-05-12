@@ -231,8 +231,8 @@ def extract_closing_date(job_description: str) -> str:
             '|september|october|november|december)\s+(\d{1,2})[,\s]+(\d{4})', raw.lower()
         )
         if m:
-            day = m.group(1).zfill(2)      # group 1 = day number e.g. "12"
-            month = month_map[m.group(2)]  # group 2 = month name e.g. "may"
+            day = m.group(2).zfill(2)      # group 1 = day number e.g. "12"
+            month = month_map[m.group(1)]  # group 2 = month name e.g. "may"
             year = m.group(3) if m.group(3) else str(datetime.today().year)
             return f"{year}-{month}-{day}"
         
@@ -246,7 +246,7 @@ def extract_closing_date(job_description: str) -> str:
             r'(?:\s+(\d{4}))?', raw.lower()
         )
         if m:
-            day = m.group(2).zfill(2)
+            day = m.group(1).zfill(2)
             month = month_map[m.group(2)]
             # If year is missing - assume current year
             year = m.group(3) if m.group(3) else str(datetime.today().year)
