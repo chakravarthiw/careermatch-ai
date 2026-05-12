@@ -13,7 +13,7 @@ from datetime import date
 
 #import modules from src/ folder
 from src.tracker import load_tracker, save_tracker, add_job, update_status, STATUSES, COLUMNS
-from src.utils import days_until, urgency_label, sponsorship_label, extract_closing_date
+from src.utils import days_until, urgency_label, sponsorship_label, extract_closing_date, extract_job_title, extract_location, extract_employment_type, extract_salary
 
 # ── Page Configuration ────────────────────────────────────────
 # # First streamlit call in scrit 
@@ -60,6 +60,10 @@ with tabs[0]:
     # Run detection as soon as text is parsed
     detected_sponsorship = sponsorship_label(job_description)
     detected_closing_date = extract_closing_date(job_description)
+    dectected_job_title = extract_job_title(job_description)
+    dectected_salary = extract_salary(job_description)
+    dectected_location = extract_location(job_description)
+    dectected_employment = extract_employment_type(job_description)
 
 
     # Colour coded feedback immediately
@@ -89,9 +93,10 @@ with tabs[0]:
     col1, col2 = st.columns(2)
 
     with col1:
-        job_title = st.text_input("Job Title *")
+        # value= prefills the field with dectedted result - user can still edit if needed
+        job_title = st.text_input("Job Title *", value=dectected_job_title)
         company = st.text_input("Company *")
-        location = st.text_input("Location  *")
+        location = st.text_input("Location  *", value = dectected_location)
         job_link = st.text_input("Job Link")
         source = st.selectbox("Source", [
             "SEEK", "LinkedIn", "Indeed",
@@ -100,10 +105,13 @@ with tabs[0]:
     
 
     with col2:
-        employment_type = st.selectbox("Empolyment Type:", [
-            "Full-time", "Part-time", "Casual", "Contract", "Internship"
-        ])
-        salary = st.text_input("Salary / Rate(optional)")
+        # Safe index- prevents crash if value not in options list
+        employment_options = ["Full-time", "Part-time", "Casual", "Contract", "Internship"]
+        default_emp_index = employment_options.index(dectected_employment) \
+        if dectected_employment in employment_options else 0
+        employment_type = st.selectbox("Empolyment Type:",employment_options, index = default_emp_index)
+        
+        salary = st.text_input("Salary / Rate(optional)", value = dectected_salary)
         
 
 
