@@ -144,6 +144,8 @@ def extract_closing_date(job_description: str) -> str:
     r"application\s+deadline\s*[:\-]?\s*(.+)",
     r"deadline\s*[:\-]?\s*(.+)",
     r"apply\s+before\s*[:\-]?\s*(.+)",
+    r"end\s+date\s*[:\-]?\s*(.+)",
+    r"applications?\s+close\s+the\s+(.+)"
 ]
 
 
@@ -184,7 +186,8 @@ def extract_closing_date(job_description: str) -> str:
             return ""
         
         # Keep only the likely date section, so extra description text does not confuse parsing
-        raw = raw[:40]
+        raw = raw[:60]
+        raw = re.sub(r'\(.*?\)', '', raw).strip()
 
 
         # PATTERN 1:  DD Month YYYY - eg: 20 May 2025
@@ -228,12 +231,44 @@ def extract_closing_date(job_description: str) -> str:
             '|september|october|november|december)\s+(\d{1,2})[,\s]+(\d{4})', raw.lower()
         )
         if m:
-            day = m.group(2).zfill(2)
-            month = month_map[m.group(1)]
-            year = m.group(3)
+            day = m.group(1).zfill(2)      # group 1 = day number e.g. "12"
+            month = month_map[m.group(2)]  # group 2 = month name e.g. "may"
+            year = m.group(3) if m.group(3) else str(datetime.today().year)
             return f"{year}-{month}-{day}"
         
 
+        # PATTERN 5:  Optional day name) DDth Month (Optional YYYY) - eg: "Tuesday 12th May", "12th May 2026", "Tuesday, 19th May"
+        m = re.search(
+            r'(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)?'
+            r',?\s*(\d{1,2})(?:st|nd|rd|th)\s+'
+            r'(january|february|march|april|may|june|july|august'
+            r'|september|october|november|december)'
+            r'(?:\s+(\d{4}))?', raw.lower()
+        )
+        if m:
+            day = m.group(2).zfill(2)
+            month = month_map[m.group(2)]
+            # If year is missing - assume current year
+            year = m.group(3) if m.group(3) else str(datetime.today().year)
+            return f"{year}-{month}-{day}"
+        
+
+        # PATTERN 6:  DDth of Month (Optional YYYY)
+        # Handles: "24th of May", "24th of May 2026", "the 24th of May"
+        m = re.search(
+            r'(\d{1,2})(?:st|nd|rd|th)\s+of\s+'
+            r'(january|february|march|april|may|june|july|august'
+            r'|september|october|november|december)'
+            r'(?:\s+(\d{4}))?',
+            raw.lower()
+        )
+        if m:
+            day   = m.group(1).zfill(2)
+            month = month_map[m.group(2)]
+            year  = m.group(3) if m.group(3) else str(datetime.today().year)
+            return f"{year}-{month}-{day}"
+
+        
         # No date pattern recogonised
         return ""
     
@@ -257,7 +292,7 @@ def extract_employment_type(job_description: str) -> str:
     # Checks most specific phrases first to avoid false matches
     # Defaults to Full Time if nothing found - most common
     # Input: raw job description type
-    # Output: Employment type string matching selectbox options
+    # Output: Employment type string matching selectbox options / "" returned if not able to find the contract type
 
 
 
@@ -270,6 +305,8 @@ def extract_employment_type(job_description: str) -> str:
 
     # Order matters - check specific phrases before generic ones
     # "fixed term" must come before "full time" to avoid errors and wrong match
+    if any(p in text for p in ["full-time", "full time"]):
+        return "Full Time"
     if any(p in text for p in ["fixed-term", "fixed term"]):
         return "Contract"
     if any(p in text for p in ["part-time", "part time"]):
@@ -278,13 +315,20 @@ def extract_employment_type(job_description: str) -> str:
         return "Internship"
     if "casual" in text:
         return "Casual"
-    if "contract" in text:
+    if any(p in text for p in [
+        "contract role",
+        "contract position",
+        "contract employment",
+        "fixed-term",
+        "fixed term",
+        "12 month contract",
+        "6 month contract"    
+    ]):
         return "Contract"
-    if any(p in text for p in ["full-time", "full time"]):
-        return "Full Time"
+    
     
     # Default value if not any of the above
-    return "Full Time"
+    return ""
 
 
 def extract_salary(job_description: str) -> str:
