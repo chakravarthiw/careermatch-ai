@@ -508,3 +508,103 @@ def extract_job_title(job_description: str) -> str:
 
 
 
+def extract_company(job_description: str) -> str:
+
+    # Extracts company name from Job description 
+    # Tries 4 methods in order with a conservative approach
+    # Input: Raw Job description
+    # Output: Company Name in string type/ "" if not confident
+
+    if not job_description:
+        return ""
+    
+
+    # ── Helpers ───────────────────────────────────────────────
+    # Words that indicate that line is NOT a company name
+    # Metadata, generic words, headers
+    NOT_COMPANY = {
+        "apply", "casual", "full time", "part time", "contract",
+        "locations", "posted", "time type", "requisition", "worldwide",
+        "about", "remote", "hybrid", "melbourne", "sydney", "brisbane",
+        "perth", "adelaide", "canberra", "vic", "nsw", "qld", "wa", "sa"
+    }
+
+
+    def clean(text:str) -> str:
+        # Strips trailing punctuation and whitespace
+        # Takes first line only in cases of multiple lines
+        lines = [l.strip() for l in text.splitlines() if l.strip()]
+        out = lines[0][:60] if lines else ""
+        return out.strip(",:-.")
+    
+
+    # ── Tier 1: Explicit Label ───────────────────────────────────────────────
+    # Most Reliable - job board or employer has included a label
+    # Eg: "Company: Microsoft" / "Organization: Microsoft"
+    anchor_patterns = [
+        r"company\s*[:\-]\s*(.+)",
+        r"organization\s*[:\-]\s*(.+)",
+        r"organisation\s*[:\-]\s*(.+)",
+        r"employer\s*[:\-]\s*(.+)",
+        r"hiring\s+company\s*[:\-]\s*(.+)"
+    ]
+    for pattern in anchor_patterns:
+        m = re.search(pattern, job_description, re.IGNORECASE)
+        if m:
+            candidate = clean(m.group(1))
+            if candidate:
+                return candidate
+            
+    
+    # ── Tier 2: Line 3 Metadata  ───────────────────────────────────────────────
+    # SEEK/ Linkdin- have Line1=tite, Line2= Apply, Line3=Company
+    lines = [l.strip() for l in job_description.splitlines() if l.strip()]
+
+    if len(lines) >=3:
+        candidate = lines[2]
+        candidate_lower = candidate.lower()
+
+
+        # Must not be a metadata word - looks like a proper company name
+        # title case or Mixed case, 1-6 words, no metadata signals
+        words = candidate.split()
+        if (
+            1 <= len(words) <=6
+            and not any(w in candidate_lower for w in NOT_COMPANY)
+            and not candidate.isupper()
+            and len(candidate) >= 3
+        ):
+            return candidate.strip(".,:-")
+        
+
+    # ── Tier 3: 'AT COMPANY' opening sentences  ───────────────────────────────────────────────    
+    # Most Common in boby of job description 
+    # At "Tennis Australia" / "AT CIRQUE DE SOleil"
+    m = re.search(
+        r'\bAT\s+([A-Z][A-Za-z0-9\s&\.\-]+?)(?:\s*,|\s+we\b|\s+our\b|\s+you\b)',
+        job_description
+    )
+    if m:
+        candidate = m.group(1).strip()
+        words = candidate.split()
+        if 1 <= len(words) <=7:
+            return candidate.strip(".,:-")
+        
+    
+    # ── Tier 4: 'Company is/are/was' patterns  ───────────────────────────────────────────────
+    # "Melbourne Park where" --> Melbourne Park
+    # "Cricket Australia is " --> Cricket Australia
+    m = re.search(
+        r'\b([A-Z][A-Za-z0-9\s&\.\-]+?)\s+(?:is|are|was|has been)\b',
+        job_description
+    )
+    if m: 
+        candidate = m.group(1).strip()
+        words = candidate.split()
+        # Conservative -> only 2-4 words to avoid false matches
+        if 2 <= len(words) <= 4:
+            return candidate.strip(",.:-")
+
+
+    # ── Tier 5: Default when not sure  ───────────────────────────────────────────────     
+    return ""

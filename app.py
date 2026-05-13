@@ -13,7 +13,7 @@ from datetime import date
 
 #import modules from src/ folder
 from src.tracker import load_tracker, save_tracker, add_job, update_status, STATUSES, COLUMNS
-from src.utils import days_until, urgency_label, sponsorship_label, extract_closing_date, extract_job_title, extract_location, extract_employment_type, extract_salary
+from src.utils import days_until, urgency_label, sponsorship_label, extract_closing_date, extract_job_title, extract_location, extract_employment_type, extract_salary, extract_company
 
 # ── Page Configuration ────────────────────────────────────────
 # # First streamlit call in scrit 
@@ -64,6 +64,7 @@ with tabs[0]:
     dectected_salary = extract_salary(job_description)
     dectected_location = extract_location(job_description)
     dectected_employment = extract_employment_type(job_description)
+    dectected_company = extract_company(job_description)
 
 
     # Colour coded feedback immediately
@@ -95,7 +96,7 @@ with tabs[0]:
     with col1:
         # value= prefills the field with dectedted result - user can still edit if needed
         job_title = st.text_input("Job Title *", value=dectected_job_title)
-        company = st.text_input("Company *")
+        company = st.text_input("Company *", value = dectected_company)
         location = st.text_input("Location  *", value = dectected_location)
         job_link = st.text_input("Job Link")
         source = st.selectbox("Source", [
