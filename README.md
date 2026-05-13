@@ -26,23 +26,26 @@ This project also demonstrates my skills in Python, data handling, text processi
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠 Tech Stack
 
-- Python
-- Streamlit
-- Pandas
-- openpyxl
-- Regex
-- Git + GitHub
+| Technology | Purpose |
+|---|---|
+| Python | Core application logic |
+| Streamlit | Interactive web interface |
+| Pandas | Data handling and analytics |
+| openpyxl | Excel-based persistence layer |
+| Regex + Rule-Based NLP | Information extraction from job descriptions |
+| Git + GitHub | Version control and project management |
 
 ---
 
 ## 🗺️ Roadmap
-- Phase 1: Application tracker, sponsorship detection, closing date extraction, dashboard
-- Phase 2: ATS keyword matching and resume-job fit score
-- Phase 3: Job link discovery using search APIs
-- Phase 4: AI-assisted resume and cover letter tailoring
-- Phase 5: Streamlit Cloud deployment and screenshots
+|---|---|---|
+| Phase 1 | Job tracker, extraction engine, dashboard | 🔄 In Progress |
+| Phase 2 | ATS keyword matching | ⏳ Planned |
+| Phase 3 | Resume and cover letter tailoring | ⏳ Planned |
+| Phase 4 | Job discovery integration | ⏳ Planned |
+| Phase 5 | Streamlit Cloud deployment | ⏳ Planned |
 
 ---
 
