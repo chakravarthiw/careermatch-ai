@@ -40,6 +40,7 @@ This project also demonstrates my skills in Python, data handling, text processi
 ---
 
 ## 🗺️ Roadmap
+| Phase | Description | Status |
 |---|---|---|
 | Phase 1 | Job tracker, extraction engine, dashboard | 🔄 In Progress |
 | Phase 2 | ATS keyword matching | ⏳ Planned |
