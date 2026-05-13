@@ -26,3 +26,6 @@ data/
 
 # JetBrains
 .idea/
+
+# Pytest
+.pytest_cache/
