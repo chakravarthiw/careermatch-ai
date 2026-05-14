@@ -7,7 +7,9 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, date
 
-from src.tracker import load_tracker, add_job, update_status, STATUSES
+from src.tracker import (
+    load_tracker, add_job, update_status, STATUSES , save_tracker, COLUMNS
+)
 from src.utils import (
     days_until,
     urgency_label,
@@ -47,17 +49,45 @@ tabs = st.tabs([
 # ═════════════════════════════════════════════════════════════
 
 with tabs[0]:
+    # Run before widgets render - session state changes after render is blocked
+    # if st.session_state.get("just_saved"):
+    #      st.success(f"✅ Job saved! Sponsorship detected: **{st.session_state.get('saved_sponsorship', '')}**")
+    #      st.balloons()
+    #      st.session_state["just_saved"]         = False
+    #      st.session_state["saved_sponsorship"]  = ""
+
+    # ── Form reset callback ───────────────────────────────────
+    # Called by Save Job button via on_click BEFORE page returns
+    # This is only safe way to clear a text_area in Streamlit
+    # Setting session_state inside on_click runs before widget instantiation
+    def save_and_reset():
+        # Read current widget values from session_state directly
+        jd = st.session_state.get("job_description_input", "")
+        if not jd:
+            return
+        # Calculate Sponsorship here so its available after rerun
+        st.session_state["saved_sponsorship"]       = sponsorship_label(jd)
+        st.session_state["just_saved"]              = True
+        st.session_state["job_description_input"]   = "" # safe here - widget not rendered yet
     st.header("Add a New Job")
 
     st.subheader("Step 1 - Paste Job Description")
     st.caption("Sponsorship and Closing Date Auto Generated")
 
+    # Show success message from previous save
+    if st.session_state.get("just_saved"):
+        st.success(f"✅ Job saved! Sponsorship detected: **{st.session_state.get('saved_sponsorship', '')}**") 
+        st.balloons()
+        st.session_state["just_saved"] = False
+
     job_description = st.text_area(
         "PASTE JOB DESCRIPTION HERE",
-        height=400,
+        height = 400,
+         key="job_description_input",
     )
+    
 
-    known_companies = get_known_companies()
+    
 
     # Run detection as soon as text is pasted
     detected_sponsorship = sponsorship_label(job_description)
@@ -66,6 +96,7 @@ with tabs[0]:
     detected_salary = extract_salary(job_description)
     detected_location = extract_location(job_description)
     detected_employment = extract_employment_type(job_description)
+    known_companies = get_known_companies()
     detected_company = extract_company(job_description, known_companies)
 
     if job_description:
@@ -130,7 +161,7 @@ with tabs[0]:
 
     notes = st.text_area("Notes")
 
-    if st.button("💾 Save Job", use_container_width=True):
+    if st.button("💾 Save Job", use_container_width=True, on_click = save_and_reset):
         if not job_title or not company:
             st.error("Job Title and Company Required")
         else:
@@ -163,8 +194,14 @@ with tabs[0]:
                 detected_company=detected_company,
             )
 
-            st.success(f"✅ Job saved! Sponsorship detected: **{detected_sponsorship}**")
-            st.balloons()
+            # st.success(f"✅ Job saved! Sponsorship detected: **{detected_sponsorship}**")
+            # st.balloons()
+            # st.rerun() # Clears form automatically -> needs to be chnaged to session_state form reset = better architecture in later iterations
+            #st.session_state["saved_sponsorship"] = detected_sponsorship
+            st.session_state["just_saved"] = True
+            st.rerun()
+
+
 
 # ═════════════════════════════════════════════════════════════
 # TAB 2 — TRACKER
@@ -237,6 +274,28 @@ with tabs[1]:
             file_name="careermatch_tracker.csv",
             mime="text/csv",
         )
+    st.divider()
+    st.subheader("⚠️ Danger Zone")
+    
+
+
+    with st.expander("DELETE ALL SAVED JOBS"):
+        st.warning("This will permanently delete all saved jobs from the tracker. CANNOT BE UNDONE!")
+        confirm_text = st.text_input(
+            "Type DELETE to confirm",
+            key = "delete_confirm"
+        )
+
+
+        if st.button("🗑️ Delete All Jobs", type="primary"):
+            if confirm_text == "DELETE":
+                # Overwrite Excel with expty dataframe
+                save_tracker(pd.DataFrame(columns = COLUMNS))
+                st.success("✅ All jobs deleted.")
+                st.rerun()
+            else:
+                st.error("Type DELETE exactly to confirm.")
+
 
 # ═════════════════════════════════════════════════════════════
 # TAB 3 — DASHBOARD
