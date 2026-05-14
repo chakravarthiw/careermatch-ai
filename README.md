@@ -1,21 +1,40 @@
 # 🎯 CareerMatch AI
 
-CareerMatch AI is a Python + Streamlit job application tracker built for the Australian job market.
+Built for the Australian graduate job market using Python, Streamlit and rule-based NLP.
 
-It helps job seekers track applications, detect visa sponsorship signals, extract closing dates from job descriptions, and monitor application progress through a dashboard.
+CareerMatch AI is a Python + Streamlit job application tracker designed to help job seekers manage applications, detect visa sponsorship signals, extract important job details, and monitor progress through an interactive dashboard.
 
 ---
 
 ## 🚀 Current Features
 
 - Paste a job description and auto-fill key fields
-- Extracts job title, company, location, salary, employment type and closing date
+- Extracts:
+  - Job title
+  - Company
+  - Location
+  - Salary
+  - Employment type
+  - Closing date
 - Detects visa sponsorship signals for Australian job ads
 - Tracks application status across the job search pipeline
-- Dashboard for application metrics and closing-soon alerts
+- Dashboard with application metrics and closing-soon alerts
 - Learner memory system for repeated company detection
-- Automated test coverage with pytest
+- Automated test coverage with `pytest`
 - Excel-based local storage
+
+---
+
+## 📸 Screenshots
+
+### Add Job
+![Add Job](docs/add-job.png)
+
+### Tracker
+![Tracker](docs/tracker.png)
+
+### Dashboard
+![Dashboard](docs/dashboard.png)
 
 ---
 
@@ -23,7 +42,12 @@ It helps job seekers track applications, detect visa sponsorship signals, extrac
 
 As an international graduate in Australia, I wanted a practical tool to manage job applications, identify sponsorship-friendly roles, and avoid missing application deadlines.
 
-This project also demonstrates my skills in Python, data handling, text processing, product thinking, and Git-based development.
+This project also demonstrates my skills in:
+- Python development
+- Data handling
+- Text processing
+- Product thinking
+- Git-based development
 
 ---
 
@@ -41,6 +65,7 @@ This project also demonstrates my skills in Python, data handling, text processi
 ---
 
 ## 🗺️ Roadmap
+
 | Phase | Description | Status |
 |---|---|---|
 | Phase 1 | Job tracker, extraction engine, dashboard | 🔄 In Progress |
@@ -51,25 +76,11 @@ This project also demonstrates my skills in Python, data handling, text processi
 
 ---
 
-## ⚙️ Setup
-
-```bash
-git clone https://github.com/chakravarthiw/careermatch-ai.git
-cd careermatch-ai
-
-python3 -m venv venv
-source venv/bin/activate
-
-pip install -r requirements.txt
-
-streamlit run app.py
-
----
 ## ✅ Testing
 
 This project includes automated tests using `pytest`.
 
-Current tests cover:
+### Current test coverage:
 - Visa sponsorship detection
 - Closing date extraction
 - Job title extraction
@@ -78,10 +89,11 @@ Current tests cover:
 - Salary extraction
 - Learner memory functions
 
-Run tests:
+### Run tests
 
 ```bash
 python -m pytest -v
+```
 
 ---
 
@@ -89,12 +101,37 @@ python -m pytest -v
 
 CareerMatch AI is currently in active Phase 1 development.
 
-The focus is on building a reliable rule-based extraction engine, stable application tracking, and a clean testing workflow before adding ATS matching and resume tailoring.
+The current focus is:
+- Reliable rule-based extraction
+- Stable application tracking
+- Clean testing workflow
+- Learning memory system
+
+Future phases will introduce ATS matching, resume tailoring, and job discovery integration.
+
+---
+
+## ⚙️ Setup
+
+```bash
+git clone https://github.com/chakravarthiw/careermatch-ai.git
+
+cd careermatch-ai
+
+python3 -m venv venv
+
+source venv/bin/activate
+
+pip install -r requirements.txt
+
+streamlit run app.py
+```
 
 ---
 
 ## 📁 Project Structure
 
+```text
 careermatch-ai/
 ├── app.py
 ├── requirements.txt
@@ -112,6 +149,6 @@ careermatch-ai/
 │
 ├── data/        # Local tracker files ignored by Git
 └── docs/        # Screenshots and documentation
+```
 
 ---
-
