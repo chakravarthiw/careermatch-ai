@@ -23,6 +23,7 @@ from src.utils import (
     extract_company,
 )
 
+import src.learner as learner
 
 # ═════════════════════════════════════════════════════════════
 # SPONSORSHIP TESTS
@@ -195,3 +196,10 @@ def test_extract_company_not_found():
     text = "We are looking for an enthusiastic operations assistant."
     known_companies = []
     assert extract_company(text, known_companies) == ""
+
+def test_extract_employment_type_returns_dropdown_label_full_time():
+    assert extract_employment_type("This is a full-time role.") == "Full-time"
+
+def test_extract_employment_type_returns_dropdown_label_part_time():
+    assert extract_employment_type("This is a part-time role.") == "Part-time"
+

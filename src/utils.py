@@ -227,8 +227,7 @@ def extract_closing_date(job_description: str) -> str:
 
         # PATTERN 4:  Month DD YYYY - eg: May 20, 2025
         m = re.search(
-            r'(january|february|march|april|may|june|july|august'
-            '|september|october|november|december)\s+(\d{1,2})[,\s]+(\d{4})', raw.lower()
+            r'(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})[,\s]+(\d{4})', raw.lower()
         )
         if m:
             day = m.group(2).zfill(2)      # group 1 = day number e.g. "12"
@@ -297,7 +296,7 @@ def extract_employment_type(job_description: str) -> str:
 
 
     if not job_description:
-        return "Full Time"
+        return ""
     
     # Convert Job Description to lewer case for NLP mechanisms
     text = job_description.lower()
@@ -306,11 +305,11 @@ def extract_employment_type(job_description: str) -> str:
     # Order matters - check specific phrases before generic ones
     # "fixed term" must come before "full time" to avoid errors and wrong match
     if any(p in text for p in ["full-time", "full time"]):
-        return "Full Time"
+        return "Full-time"
     if any(p in text for p in ["fixed-term", "fixed term"]):
         return "Contract"
     if any(p in text for p in ["part-time", "part time"]):
-        return "Part Time"
+        return "Part-time"
     if any(p in text for p in ["internship", "intern ", "graduate program"]):
         return "Internship"
     if "casual" in text:
@@ -526,7 +525,7 @@ def extract_company(job_description: str, known_companies: list = []) -> str:
     # Scan Job description for company names seen before
     # Exact Match - most reliable matching possible 
     for company in known_companies:
-        if company.lower() in text_lower:
+        if re.search(rf"\b{re.escape(company.lower())}\b", text_lower):
             return company
         
 
