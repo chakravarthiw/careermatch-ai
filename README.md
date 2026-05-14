@@ -8,13 +8,14 @@ It helps job seekers track applications, detect visa sponsorship signals, extrac
 
 ## 🚀 Current Features
 
-- 📋 Job application tracker
-- 🛂 Visa sponsorship detection from job descriptions
-- 📅 Closing date extraction from job descriptions
-- 🔍 Filterable tracker by status and sponsorship
-- 📊 Dashboard with application metrics
-- ⏰ Closing soon alerts
-- 📁 Excel/CSV-based tracking
+- Paste a job description and auto-fill key fields
+- Extracts job title, company, location, salary, employment type and closing date
+- Detects visa sponsorship signals for Australian job ads
+- Tracks application status across the job search pipeline
+- Dashboard for application metrics and closing-soon alerts
+- Learner memory system for repeated company detection
+- Automated test coverage with pytest
+- Excel-based local storage
 
 ---
 
@@ -63,10 +64,38 @@ pip install -r requirements.txt
 
 streamlit run app.py
 
-📁 Project Structure
+---
+## ✅ Testing
+
+This project includes automated tests using `pytest`.
+
+Current tests cover:
+- Visa sponsorship detection
+- Closing date extraction
+- Job title extraction
+- Company extraction
+- Employment type extraction
+- Salary extraction
+- Learner memory functions
+
+Run tests:
+
+```bash
+python -m pytest -v
+
+---
+
+## 🚧 Current Status
+
+CareerMatch AI is currently in active Phase 1 development.
+
+The focus is on building a reliable rule-based extraction engine, stable application tracking, and a clean testing workflow before adding ATS matching and resume tailoring.
+
+---
+
+## 📁 Project Structure
 
 careermatch-ai/
-│
 ├── app.py
 ├── requirements.txt
 ├── README.md
@@ -74,10 +103,15 @@ careermatch-ai/
 │
 ├── src/
 │   ├── tracker.py
-│   └── utils.py
+│   ├── utils.py
+│   └── learner.py
+│
+├── tests/
+│   ├── test_utils.py
+│   └── test_learner.py
 │
 ├── data/        # Local tracker files ignored by Git
-├── resumes/     # Local resume files ignored by Git
 └── docs/        # Screenshots and documentation
 
+---
 
