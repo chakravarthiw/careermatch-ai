@@ -654,14 +654,22 @@ with tabs[1]:
                 .str.contains(search_lower)
             ]
 
-        st.caption(
-            f"Showing **{len(filtered)}** of **{len(df)}** jobs"
-        )
+        # Display columns - focused view , full data saved on excel sheet 
+        display_columns = [
+            "Job Title", "Company", "Status", "Sponsorship", "Closing Date",
+            "Job Link"
+        ]
+
+        # Only show columns that actually exist in the dataframe
+        # Prevents crashes if a column is missing data for some reason
+        safe_display = [col for col in display_columns if col in filtered.columns]
+
+        st.caption(f"Showing **{len(filtered)}** of **{len(df)}** jobs")
 
         st.dataframe(
-            filtered,
-            use_container_width=True,
-            height=400,
+            filtered[safe_display],
+            width = "content",
+            height = 400
         )
 
         # ─────────────────────────────────────────────────────
@@ -681,6 +689,25 @@ with tabs[1]:
                 max_value=len(df) - 1,
                 step=1,
             )
+
+            #  ── Job Detail View ───────────────────────────────
+            # when user enters a row number, show full deatils
+            # of that specific job including hidden fields
+            if row_index < len(df):
+                selected_row = df.iloc[int(row_index)]
+                
+                with st.expander(
+                    f"📋 {selected_row.get('Job Title', '')} "
+                    f"at {selected_row.get('Company', '')}",
+                    expanded =False
+                ):
+                    # Convert single row top a two-column key-value table
+                    # T = transpose flips row to column to make more readable 
+                    st.dataframe(
+                        selected_row.to_frame(name="Details"),
+                        width = "content"
+                    )
+            
 
             new_status = st.selectbox(
                 "New Status",
