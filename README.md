@@ -57,13 +57,27 @@ Current pytest coverage includes:
 - Job title extraction
 - Company extraction
 - Learner memory functions
+- Job search functionality
 
+---
+
+# 📸 Screenshots
+
+## Add Job
+![Add Job](docs/add-job.png)
+
+## Tracker
+![Tracker](docs/tracker.png)
+
+## Dashboard
+![Dashboard](docs/dashboard.png)
 
 ---
 
 # 💡 Why I Built This
 
-As an international graduate in Australia, I wanted a practical tool to manage job applications, identify sponsorship-friendly roles, and avoid missing application deadlines.
+As an international graduate on a Subclass 485 visa in Australia,  
+I wanted a practical tool to manage job applications, identify sponsorship-friendly roles, and avoid missing application deadlines.
 
 This project also demonstrates my skills in:
 
@@ -96,11 +110,12 @@ This project also demonstrates my skills in:
 
 | Phase | Description | Status |
 |---|---|---|
-| Phase 1 | Job tracker, extraction engine, dashboard, job search | 🔄 In Progress |
-| Phase 2 | ATS keyword matching | ⏳ Planned |
-| Phase 3 | Resume and cover letter tailoring | ⏳ Planned |
-| Phase 4 | AI-assisted application workflow | ⏳ Planned |
-| Phase 5 | Streamlit Cloud deployment | ⏳ Planned |
+| Phase 1 | Tracker, extraction, sponsorship detection, dashboard | ✅ Complete |
+| Phase 2 | Job search integration (Adzuna API) | ✅ Complete |
+| Phase 3 | ATS keyword matching | ⏳ Planned |
+| Phase 4 | Resume and cover letter tailoring (Claude API) | ⏳ Planned |
+| Phase 5 | AI-assisted application agent | ⏳ Planned |
+| Phase 6 | Streamlit Cloud deployment | ⏳ Planned |
 
 ---
 
@@ -129,7 +144,7 @@ python -m pytest -v
 
 # 🚧 Current Status
 
-CareerMatch AI is currently in active Phase 1 development.
+CareerMatch AI is currently in active development.
 
 ## Current focus
 
@@ -179,13 +194,13 @@ careermatch-ai/
 │   ├── tracker.py
 │   ├── utils.py
 │   ├── learner.py
-│   ├── job_search.py
-│   │
-│   └── tabs/
-│       ├── tab_job_search.py
-│       ├── tab_add_job.py
-│       ├── tab_tracker.py
-│       └── tab_dashboard.py
+│   └── job_search.py
+│
+├── tabs/
+│   ├── tab_job_search.py
+│   ├── tab_add_job.py
+│   ├── tab_tracker.py
+│   └── tab_dashboard.py
 │
 ├── tests/
 │   ├── test_utils.py
