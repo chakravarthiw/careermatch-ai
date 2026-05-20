@@ -89,28 +89,25 @@ def search_jobs(
             jobs.append(cleaned_jobs)
 
         # Sponsorship Aware results list
+            # Sort sponsorship-friendly jobs to top if requested
         if sponsorship_priority:
-
             priority_order = {
-                    "Likely Sponsorship"       : 0,
-                    "Unknown"                  : 1,
-                    "Not Mentioned"            : 2,
-                    "No Sponsorship"           : 3
+                "Likely Sponsorship" : 0,
+                "Unknown"            : 1,
+                "Not Mentioned"      : 2,
+                "No Sponsorship"     : 3
             }
-
-                # Sort the jobs based on the priority order
             jobs.sort(
-                    key = lambda x: priority_order.get(
-                        x["sponsorship"], 99
-                    )
-                )
-            
+                key=lambda x: priority_order.get(x["sponsorship"], 99)
+            )
+
         return jobs
-    except Exception as e:
-        print("API ERROR", e)
-        return []
+
     except requests.exceptions.RequestException as e:
         print(f"API ERROR: {e}")
+        return []
+    except Exception as e:
+        print(f"UNEXPECTED ERROR: {e}")
         return []
 
 
