@@ -69,7 +69,7 @@ def search_jobs(
             description = job.get("description", "")
 
             # Run sponsorship detection
-            sponsorship = sponsorship_label(description) if len(description) > 100 else "See full listing"
+            sponsorship = sponsorship_label(description) 
 
             # Create a dictionary for clean jobs
             cleaned_jobs = {
