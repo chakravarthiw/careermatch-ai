@@ -28,3 +28,10 @@ def test_search_jobs():
         print("LOCATION:", job["location"])
         print("SPONSORSHIP:", job["sponsorship"])
         print("LINK:", job["link"])
+        print("DESC LENGTH :", len(job["description"]))
+        print("DESCRIPTION:", job["description"])
+
+    # Don't assert specific sponsorship values — API results change
+    # Just assert the structure is correct
+    assert all("title" in job for job in jobs)
+    assert all("sponsorship" in job for job in jobs)
