@@ -31,3 +31,4 @@ data/
 .pytest_cache/
 data/master_resume.txt
 data/master_resume.txt
+data/resume_last_updated.txt
