@@ -25,7 +25,7 @@
 
 import streamlit as st
 from src.resume_store import(
-    save_resume, load_resume, resume_exists, delete_resume
+    save_resume, load_resume, resume_exists, delete_resume, get_resume_last_updated
 )
 
 # ═════════════════════════════════════════════════════════════
@@ -70,43 +70,69 @@ def render():
     if resume_exists():
         word_count = len(saved_resume.split())
         st.success(f"Current Resume Saved - {word_count} words")
+        # ─────────────────────────────────────────────────────────
+        # RESUME METRICS
+        # ─────────────────────────────────────────────────────────
+        # Shows quick statistics about the saved resume.
+        # Helps users understand resume size and completeness.
+        # ─────────────────────────────────────────────────────────
+
+        word_count = len(saved_resume.split()) if saved_resume else 0
+
+        char_count = len(saved_resume) if saved_resume else 0
+
+        last_updated = get_resume_last_updated()
+
+        line_count = (
+            len(saved_resume.splitlines())
+            if saved_resume
+            else 0
+        )
+
+        # ─────────────────────────────────────────────────────────
+        # RESUME HEALTH METRICS
+        # ─────────────────────────────────────────────────────────  
+        # Simple heuristic check for resume completeness.
+        # This is NOT ATS scoring yet — only basic health feedback.
+        # ─────────────────────────────────────────────────────────
+        if word_count < 250:
+            health = "Too Short"
+            health_message = "Your resume needs to be worked on, might be missing valuable experience"
+        elif word_count > 1200:
+            health = "Too Long"
+            health_message = "Your resume is too long for recruiters to scan quickly."
+        else :
+            health = "Good Length"
+            health_message =  "Your resume length looks reasonable for most applications."
+
+        st.caption(f"Resume last updated at {last_updated}")
+
+        st.metric(
+            "Resume Health",
+            health + '\n' + health_message
+        )
+        
+
+        metric_col1, metric_col2, metric_col3 = st.columns(3)
+
+        metric_col1.metric(
+            "Words",
+            word_count
+        )
+
+        metric_col2.metric(
+            "Characters",
+            char_count
+        )
+
+        metric_col3.metric(
+            "Lines",
+            line_count
+        )
+
     else:
         st.warning("Please save a resume")
         
-    # ─────────────────────────────────────────────────────────
-    # RESUME METRICS
-    # ─────────────────────────────────────────────────────────
-    # Shows quick statistics about the saved resume.
-    # Helps users understand resume size and completeness.
-    # ─────────────────────────────────────────────────────────
-
-    word_count = len(saved_resume.split()) if saved_resume else 0
-
-    char_count = len(saved_resume) if saved_resume else 0
-
-    line_count = (
-        len(saved_resume.splitlines())
-        if saved_resume
-        else 0
-    )
-
-    metric_col1, metric_col2, metric_col3 = st.columns(3)
-
-    metric_col1.metric(
-        "Words",
-        word_count
-    )
-
-    metric_col2.metric(
-        "Characters",
-        char_count
-    )
-
-    metric_col3.metric(
-        "Lines",
-        line_count
-    )
-
     st.divider()
             
 
