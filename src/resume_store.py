@@ -33,11 +33,11 @@ def save_resume(text: str) -> None:
     with open(RESUME_PATH, "w", encoding ="utf-8") as f:
         f.write(text.strip())
         # Save timestamp
-        updated_at = datetime.now().strftime(
-            "%d %b %Y %I:%M %p"
-        )
-        with open(TIMESTAMP_PATH, "w", encoding = "utf-8") as f:
-            f.write(updated_at)
+    updated_at = datetime.now().strftime(
+        "%d %b %Y %I:%M %p"
+    )
+    with open(TIMESTAMP_PATH, "w", encoding = "utf-8") as f:
+        f.write(updated_at)
 
 
 def load_resume() -> str:
