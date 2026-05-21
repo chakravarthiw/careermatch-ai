@@ -13,6 +13,7 @@ from tabs.tab_job_search import render as render_job_search
 from tabs.tab_add_job    import render as render_add_job
 from tabs.tab_tracker    import render as render_tracker
 from tabs.tab_dashboard  import render as render_dashboard
+from tabs.tab_resume_manager import render as render_resume_manager
 
 # ── Page Configuration ────────────────────────────────────────
 # Must be the first Streamlit call in the entire app.
@@ -37,9 +38,24 @@ tabs = st.tabs([
     "➕ Add Job",
     "📋 Tracker",
     "📊 Dashboard",
+    "📄 Resume Manager",
 ])
 
-render_job_search(tabs)
-render_add_job(tabs)
-render_tracker(tabs)
-render_dashboard(tabs)
+# ── Render Each Tab ──────────────────────────────────────────
+# app.py decides WHERE each tab appears.
+# Individual modules only handle their own UI and logic.
+
+with tabs[0]:
+    render_job_search()
+
+with tabs[1]:
+    render_add_job()
+
+with tabs[2]:
+    render_tracker()
+
+with tabs[3]:
+    render_dashboard()
+
+with tabs[4]:
+    render_resume_manager()

@@ -249,211 +249,208 @@ def _show_detection_feedback(detected: dict):
             st.warning(f"🛂 Sponsorship: **{detected['sponsorship']}**")
 
 
-def render(tabs):
-    # render() is called from app.py and draws the entire Add Job tab.
-    # Input : tabs — list of Streamlit tab objects from st.tabs()
-    # Output: rendered Streamlit UI inside tabs[1]
+def render():
 
-    with tabs[1]:
+    st.header("➕ Add a New Job")
 
-        # Initialise session state defaults on first load
-        _initialise_session_state()
+    # Initialise session state defaults on first load
+    _initialise_session_state()
 
-        st.header("Add a New Job")
+    st.header("Add a New Job")
 
-        # ── Success Message ───────────────────────────────────
-        # After saving, the app calls st.rerun() which clears
-        # all local variables. We use session_state flags to
-        # persist the success message across the rerun so it
-        # appears after the form has reset — not before.
-        if st.session_state.get("just_saved"):
-            st.success(
-                f"✅ Job saved! Sponsorship: "
-                f"**{st.session_state.get('saved_sponsorship', 'Unknown')}**"
-            )
-            st.balloons()
-            # Reset flag so message only shows once
-            st.session_state["just_saved"] = False
+    # ── Success Message ───────────────────────────────────
+    # After saving, the app calls st.rerun() which clears
+    # all local variables. We use session_state flags to
+    # persist the success message across the rerun so it
+    # appears after the form has reset — not before.
+    if st.session_state.get("just_saved"):
+        st.success(
+            f"✅ Job saved! Sponsorship: "
+            f"**{st.session_state.get('saved_sponsorship', 'Unknown')}**"
+        )
+        st.balloons()
+        # Reset flag so message only shows once
+        st.session_state["just_saved"] = False
 
-        # ── Step 1: Job Description ───────────────────────────
-        # The description box appears first so auto-detections
-        # run before the user scrolls to the form fields below.
-        # This means the form is already pre-filled by the time
-        # the user reaches Step 2.
-        st.subheader("Step 1 — Paste Job Description")
-        st.caption(
-            "Job title, company, location, salary, employment type, "
-            "closing date and sponsorship will be auto-detected."
+    # ── Step 1: Job Description ───────────────────────────
+    # The description box appears first so auto-detections
+    # run before the user scrolls to the form fields below.
+    # This means the form is already pre-filled by the time
+    # the user reaches Step 2.
+    st.subheader("Step 1 — Paste Job Description")
+    st.caption(
+        "Job title, company, location, salary, employment type, "
+        "closing date and sponsorship will be auto-detected."
+    )
+
+    job_description = st.text_area(
+        "Paste Job Description Here",
+        height=400,
+        key="job_description_input",
+        help="Paste the full job ad here. The more complete the description, the more accurate the auto-detection."
+    )
+
+    # Run extraction pipeline and auto-fill only when
+    # description text is present
+    if job_description:
+        detected = _run_extraction_pipeline(job_description)
+        _autofill_empty_fields(detected)
+        _show_detection_feedback(detected)
+    else:
+        # Empty detected dict — used as safe default below
+        detected = {
+            "sponsorship"     : "Unknown",
+            "closing_date"    : "",
+            "job_title"       : "",
+            "salary"          : "",
+            "location"        : "",
+            "employment_type" : "Full-time",
+            "company"         : "",
+        }
+
+    st.divider()
+
+    # ── Step 2: Job Details Form ──────────────────────────
+    # Fields are pre-filled from auto-detection where possible.
+    # The user reviews, corrects if needed, then saves.
+    # All corrections are recorded to learner memory on save.
+    st.subheader("Step 2 — Confirm or Edit Job Details")
+    st.caption(
+        "Auto-detected fields are pre-filled. "
+        "Check and correct anything before saving."
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        st.text_input("Job Title *", key="_title_input")
+
+        # Hint shown only if description was pasted but
+        # title could not be detected — prompts manual entry
+        if job_description and not detected["job_title"]:
+            st.caption("⚠️ Could not detect title — please enter manually.")
+
+        st.text_input("Company *", key="_company_input")
+        st.text_input("Location", key="_location_input")
+        st.text_input(
+            "Job Link (full URL)",
+            key="_job_link_input",
+            placeholder="https://www.seek.com.au/job/12345678"
+        )
+        st.selectbox(
+            "Source",
+            ["SEEK", "LinkedIn", "Indeed", "Company Website", "Referral", "Other"],
+            key="_source_input",
         )
 
-        job_description = st.text_area(
-            "Paste Job Description Here",
-            height=400,
-            key="job_description_input",
-            help="Paste the full job ad here. The more complete the description, the more accurate the auto-detection."
+    with col2:
+
+        st.selectbox(
+            "Employment Type",
+            EMPLOYMENT_OPTIONS,
+            key="_employment_input",
         )
 
-        # Run extraction pipeline and auto-fill only when
-        # description text is present
-        if job_description:
-            detected = _run_extraction_pipeline(job_description)
-            _autofill_empty_fields(detected)
-            _show_detection_feedback(detected)
-        else:
-            # Empty detected dict — used as safe default below
-            detected = {
-                "sponsorship"     : "Unknown",
-                "closing_date"    : "",
-                "job_title"       : "",
-                "salary"          : "",
-                "location"        : "",
-                "employment_type" : "Full-time",
-                "company"         : "",
-            }
-
-        st.divider()
-
-        # ── Step 2: Job Details Form ──────────────────────────
-        # Fields are pre-filled from auto-detection where possible.
-        # The user reviews, corrects if needed, then saves.
-        # All corrections are recorded to learner memory on save.
-        st.subheader("Step 2 — Confirm or Edit Job Details")
-        st.caption(
-            "Auto-detected fields are pre-filled. "
-            "Check and correct anything before saving."
+        st.text_input(
+            "Salary / Rate (optional)",
+            key="_salary_input",
         )
 
-        col1, col2 = st.columns(2)
+        # ── Closing Date ──────────────────────────────────
+        # If a closing date was auto-detected, convert the
+        # "YYYY-MM-DD" string back to a date object so the
+        # calendar picker can use it as the default value.
+        # User can always click a different date to override.
+        if detected["closing_date"]:
+            try:
+                from datetime import datetime
+                default_date = datetime.strptime(
+                    detected["closing_date"], "%Y-%m-%d"
+                ).date()
+                # Only set if not already manually overridden
+                if st.session_state.get("_closing_input") == date.today():
+                    st.session_state["_closing_input"] = default_date
+            except ValueError:
+                pass
 
-        with col1:
+        st.date_input("Closing Date", key="_closing_input")
 
-            st.text_input("Job Title *", key="_title_input")
+    st.text_area("Notes", key="_notes_input")
 
-            # Hint shown only if description was pasted but
-            # title could not be detected — prompts manual entry
-            if job_description and not detected["job_title"]:
-                st.caption("⚠️ Could not detect title — please enter manually.")
+    # ── Save Job Button ───────────────────────────────────
+    # on_click= runs _save_and_reset() before the page rerenders.
+    # The save logic below then reads from the _snap_* keys
+    # that the callback wrote, not from the cleared form fields.
+    if st.button(
+        "💾 Save Job",
+        width="stretch",
+        on_click=_save_and_reset,
+    ):
+        if st.session_state.get("_pending_save"):
 
-            st.text_input("Company *", key="_company_input")
-            st.text_input("Location", key="_location_input")
-            st.text_input(
-                "Job Link (full URL)",
-                key="_job_link_input",
-                placeholder="https://www.seek.com.au/job/12345678"
-            )
-            st.selectbox(
-                "Source",
-                ["SEEK", "LinkedIn", "Indeed", "Company Website", "Referral", "Other"],
-                key="_source_input",
-            )
+            # Read all snapshotted values
+            snap_jd         = st.session_state.get("_snap_jd", "")
+            snap_title      = st.session_state.get("_snap_title", "")
+            snap_company    = st.session_state.get("_snap_company", "")
+            snap_location   = st.session_state.get("_snap_location", "")
+            snap_link       = st.session_state.get("_snap_job_link", "")
+            snap_source     = st.session_state.get("_snap_source", "SEEK")
+            snap_emp        = st.session_state.get("_snap_employment", "Full-time")
+            snap_salary     = st.session_state.get("_snap_salary", "")
+            snap_closing    = st.session_state.get("_snap_closing", date.today())
+            snap_notes      = st.session_state.get("_snap_notes", "")
 
-        with col2:
+            # Validate required fields before writing to Excel
+            if not snap_title or not snap_company:
+                st.error("Job Title and Company are required.")
+                st.session_state["_pending_save"] = False
 
-            st.selectbox(
-                "Employment Type",
-                EMPLOYMENT_OPTIONS,
-                key="_employment_input",
-            )
+            else:
+                # Run sponsorship detection on the snapshotted
+                # description — not the cleared form field
+                snap_sponsorship = sponsorship_label(snap_jd)
 
-            st.text_input(
-                "Salary / Rate (optional)",
-                key="_salary_input",
-            )
+                # Write new job row to Excel via tracker.py
+                add_job(
+                    job_title=snap_title,
+                    company=snap_company,
+                    location=snap_location,
+                    job_link=snap_link,
+                    source=snap_source,
+                    closing_date=str(snap_closing),
+                    employment_type=snap_emp,
+                    salary=snap_salary,
+                    sponsorship=snap_sponsorship,
+                    notes=snap_notes,
+                )
 
-            # ── Closing Date ──────────────────────────────────
-            # If a closing date was auto-detected, convert the
-            # "YYYY-MM-DD" string back to a date object so the
-            # calendar picker can use it as the default value.
-            # User can always click a different date to override.
-            if detected["closing_date"]:
-                try:
-                    from datetime import datetime
-                    default_date = datetime.strptime(
-                        detected["closing_date"], "%Y-%m-%d"
-                    ).date()
-                    # Only set if not already manually overridden
-                    if st.session_state.get("_closing_input") == date.today():
-                        st.session_state["_closing_input"] = default_date
-                except ValueError:
-                    pass
+                # ── Learner Memory Update ─────────────────
+                # Record confirmed values for future learning.
+                # record_correction() stores whether the app
+                # correctly predicted the job title.
+                # record_company() stores the confirmed company
+                # name for future description matching.
+                lines = snap_jd.splitlines() if snap_jd else []
 
-            st.date_input("Closing Date", key="_closing_input")
+                record_correction(
+                    confirmed_title=snap_title,
+                    detected_title=detected["job_title"],
+                    first_line=lines[0].strip() if lines else "",
+                    second_line=lines[1].strip() if len(lines) > 1 else "",
+                )
 
-        st.text_area("Notes", key="_notes_input")
+                record_company(
+                    confirmed_company=snap_company,
+                    detected_company=detected["company"],
+                )
 
-        # ── Save Job Button ───────────────────────────────────
-        # on_click= runs _save_and_reset() before the page rerenders.
-        # The save logic below then reads from the _snap_* keys
-        # that the callback wrote, not from the cleared form fields.
-        if st.button(
-            "💾 Save Job",
-            width="stretch",
-            on_click=_save_and_reset,
-        ):
-            if st.session_state.get("_pending_save"):
+                # Store sponsorship result so success message
+                # can display it after st.rerun()
+                st.session_state["saved_sponsorship"] = snap_sponsorship
+                st.session_state["just_saved"]        = True
+                st.session_state["_pending_save"]     = False
 
-                # Read all snapshotted values
-                snap_jd         = st.session_state.get("_snap_jd", "")
-                snap_title      = st.session_state.get("_snap_title", "")
-                snap_company    = st.session_state.get("_snap_company", "")
-                snap_location   = st.session_state.get("_snap_location", "")
-                snap_link       = st.session_state.get("_snap_job_link", "")
-                snap_source     = st.session_state.get("_snap_source", "SEEK")
-                snap_emp        = st.session_state.get("_snap_employment", "Full-time")
-                snap_salary     = st.session_state.get("_snap_salary", "")
-                snap_closing    = st.session_state.get("_snap_closing", date.today())
-                snap_notes      = st.session_state.get("_snap_notes", "")
-
-                # Validate required fields before writing to Excel
-                if not snap_title or not snap_company:
-                    st.error("Job Title and Company are required.")
-                    st.session_state["_pending_save"] = False
-
-                else:
-                    # Run sponsorship detection on the snapshotted
-                    # description — not the cleared form field
-                    snap_sponsorship = sponsorship_label(snap_jd)
-
-                    # Write new job row to Excel via tracker.py
-                    add_job(
-                        job_title=snap_title,
-                        company=snap_company,
-                        location=snap_location,
-                        job_link=snap_link,
-                        source=snap_source,
-                        closing_date=str(snap_closing),
-                        employment_type=snap_emp,
-                        salary=snap_salary,
-                        sponsorship=snap_sponsorship,
-                        notes=snap_notes,
-                    )
-
-                    # ── Learner Memory Update ─────────────────
-                    # Record confirmed values for future learning.
-                    # record_correction() stores whether the app
-                    # correctly predicted the job title.
-                    # record_company() stores the confirmed company
-                    # name for future description matching.
-                    lines = snap_jd.splitlines() if snap_jd else []
-
-                    record_correction(
-                        confirmed_title=snap_title,
-                        detected_title=detected["job_title"],
-                        first_line=lines[0].strip() if lines else "",
-                        second_line=lines[1].strip() if len(lines) > 1 else "",
-                    )
-
-                    record_company(
-                        confirmed_company=snap_company,
-                        detected_company=detected["company"],
-                    )
-
-                    # Store sponsorship result so success message
-                    # can display it after st.rerun()
-                    st.session_state["saved_sponsorship"] = snap_sponsorship
-                    st.session_state["just_saved"]        = True
-                    st.session_state["_pending_save"]     = False
-
-                    # Rerun refreshes the UI with cleared form
-                    # and shows the success message at the top
-                    st.rerun()
+                # Rerun refreshes the UI with cleared form
+                # and shows the success message at the top
+                st.rerun()

@@ -199,123 +199,122 @@ def _render_job_card(i: int, job: dict):
                 )
 
 
-def render(tabs):
-    # render() is called from app.py and draws the entire Job Search tab.
+def render():
     # Input : tabs — list of Streamlit tab objects from st.tabs()
     # Output: rendered Streamlit UI inside tabs[0]
 
-    with tabs[0]:
+    
 
-        st.header("🔍 Find Jobs")
-        st.caption(
-            "Search Australian jobs via Adzuna. "
-            "Enable sponsorship sorting to rank visa-friendly roles to the top."
+    st.header("🔍 Find Jobs")
+    st.caption(
+        "Search Australian jobs via Adzuna. "
+        "Enable sponsorship sorting to rank visa-friendly roles to the top."
+    )
+
+    # ── Initialise Session State ──────────────────────────
+    # Persist search results and added-cards tracking across
+    # Streamlit reruns. Without this, results disappear every
+    # time the user interacts with any widget on the page.
+    if "search_results" not in st.session_state:
+        st.session_state["search_results"] = []
+
+    if "search_keyword_used" not in st.session_state:
+        st.session_state["search_keyword_used"] = ""
+
+    if "search_location_used" not in st.session_state:
+        st.session_state["search_location_used"] = ""
+
+    if "added_jobs" not in st.session_state:
+        st.session_state["added_jobs"] = set()
+
+    # ── Search Controls ───────────────────────────────────
+    # Three controls in a row:
+    # 1. Keyword input — job title or skills
+    # 2. Location input — city or state
+    # 3. Sponsorship toggle — sorts results by visa friendliness
+    col_s1, col_s2, col_s3 = st.columns([2, 2, 1])
+
+    with col_s1:
+        search_keyword = st.text_input(
+            "Job Title / Keywords",
+            placeholder="e.g. Data Analyst, Event Coordinator",
+            key="search_keyword",
         )
 
-        # ── Initialise Session State ──────────────────────────
-        # Persist search results and added-cards tracking across
-        # Streamlit reruns. Without this, results disappear every
-        # time the user interacts with any widget on the page.
-        if "search_results" not in st.session_state:
-            st.session_state["search_results"] = []
+    with col_s2:
+        search_location = st.text_input(
+            "Location",
+            placeholder="e.g. Melbourne, Sydney, Australia",
+            value="Melbourne",
+            key="search_location",
+        )
 
-        if "search_keyword_used" not in st.session_state:
-            st.session_state["search_keyword_used"] = ""
+    with col_s3:
+        # st.write("") adds vertical space to align the
+        # toggle with the text inputs above it
+        st.write("")
+        sponsorship_priority = st.toggle(
+            "🛂 Sponsorship first",
+            value=True,
+            help=(
+                "Sorts results so sponsorship-friendly jobs "
+                "appear at the top of the list"
+            ),
+        )
 
-        if "search_location_used" not in st.session_state:
-            st.session_state["search_location_used"] = ""
+    search_clicked = st.button(
+        "🔍 Search Jobs",
+        width="stretch",
+    )
 
-        if "added_jobs" not in st.session_state:
+    # ── Execute Search ────────────────────────────────────
+    # Only runs when Search button is clicked.
+    # Results stored in session_state so they persist across
+    # reruns triggered by other widget interactions.
+    if search_clicked:
+        if not search_keyword:
+            st.warning("Please enter a job title or keyword.")
+        else:
+            with st.spinner(
+                f"Searching for **{search_keyword}** "
+                f"jobs in **{search_location}**..."
+            ):
+                results = search_jobs(
+                    keyword=search_keyword,
+                    location=search_location,
+                    sponsorship_priority=sponsorship_priority,
+                )
+
+            # Store results and search terms for display
+            st.session_state["search_results"]       = results
+            st.session_state["search_keyword_used"]  = search_keyword
+            st.session_state["search_location_used"] = search_location
+
+            # Reset added cards tracking for new search
+            # User starts fresh — no cards marked as added
             st.session_state["added_jobs"] = set()
 
-        # ── Search Controls ───────────────────────────────────
-        # Three controls in a row:
-        # 1. Keyword input — job title or skills
-        # 2. Location input — city or state
-        # 3. Sponsorship toggle — sorts results by visa friendliness
-        col_s1, col_s2, col_s3 = st.columns([2, 2, 1])
+            if not results:
+                st.warning(
+                    "No jobs found. Try different keywords or location."
+                )
 
-        with col_s1:
-            search_keyword = st.text_input(
-                "Job Title / Keywords",
-                placeholder="e.g. Data Analyst, Event Coordinator",
-                key="search_keyword",
-            )
+    # ── Display Results ───────────────────────────────────
+    # Read from session_state — not from the search call above.
+    # This means results stay visible even after the user
+    # interacts with filters or other widgets on the page.
+    results = st.session_state.get("search_results", [])
 
-        with col_s2:
-            search_location = st.text_input(
-                "Location",
-                placeholder="e.g. Melbourne, Sydney, Australia",
-                value="Melbourne",
-                key="search_location",
-            )
+    if results:
+        st.divider()
 
-        with col_s3:
-            # st.write("") adds vertical space to align the
-            # toggle with the text inputs above it
-            st.write("")
-            sponsorship_priority = st.toggle(
-                "🛂 Sponsorship first",
-                value=True,
-                help=(
-                    "Sorts results so sponsorship-friendly jobs "
-                    "appear at the top of the list"
-                ),
-            )
-
-        search_clicked = st.button(
-            "🔍 Search Jobs",
-            width="stretch",
+        # Show result count and search terms as context
+        st.caption(
+            f"Found **{len(results)}** jobs for "
+            f"**{st.session_state.get('search_keyword_used', '')}** "
+            f"in **{st.session_state.get('search_location_used', '')}**"
         )
 
-        # ── Execute Search ────────────────────────────────────
-        # Only runs when Search button is clicked.
-        # Results stored in session_state so they persist across
-        # reruns triggered by other widget interactions.
-        if search_clicked:
-            if not search_keyword:
-                st.warning("Please enter a job title or keyword.")
-            else:
-                with st.spinner(
-                    f"Searching for **{search_keyword}** "
-                    f"jobs in **{search_location}**..."
-                ):
-                    results = search_jobs(
-                        keyword=search_keyword,
-                        location=search_location,
-                        sponsorship_priority=sponsorship_priority,
-                    )
-
-                # Store results and search terms for display
-                st.session_state["search_results"]       = results
-                st.session_state["search_keyword_used"]  = search_keyword
-                st.session_state["search_location_used"] = search_location
-
-                # Reset added cards tracking for new search
-                # User starts fresh — no cards marked as added
-                st.session_state["added_jobs"] = set()
-
-                if not results:
-                    st.warning(
-                        "No jobs found. Try different keywords or location."
-                    )
-
-        # ── Display Results ───────────────────────────────────
-        # Read from session_state — not from the search call above.
-        # This means results stay visible even after the user
-        # interacts with filters or other widgets on the page.
-        results = st.session_state.get("search_results", [])
-
-        if results:
-            st.divider()
-
-            # Show result count and search terms as context
-            st.caption(
-                f"Found **{len(results)}** jobs for "
-                f"**{st.session_state.get('search_keyword_used', '')}** "
-                f"in **{st.session_state.get('search_location_used', '')}**"
-            )
-
-            # Render each job as a collapsible card
-            for i, job in enumerate(results):
-                _render_job_card(i, job)
+        # Render each job as a collapsible card
+        for i, job in enumerate(results):
+            _render_job_card(i, job)
