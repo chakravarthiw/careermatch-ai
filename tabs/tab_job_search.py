@@ -123,7 +123,7 @@ def apply_job_type_filter(results: list, job_type: str) -> list:
         return results
     
     return[job for job in results
-           if job.get("employment_type")== selected_job_type]
+           if job.get("employment_type")== job_type]
 
 
 def _render_job_card(i: int, job: dict):
@@ -376,39 +376,39 @@ def render():
     with st.expander("⚙️ Advanced Filters", expanded = False):
         col_fetch, col_type, col_sort, col_age = st.columns(4)
     
-    with col_fetch:
-        jobs_to_fetch = st.selectbox(
-            "Jobs to Fetch",
-            options = JOBS_TO_FETCH_OPTIONS,
-            index = 0,
-            key = "jobs_to_fetch",
-            help = ("How many jobs to get from Adzuna.")
-        )
+        with col_fetch:
+            jobs_to_fetch = st.selectbox(
+                "Jobs to Fetch",
+                options = JOBS_TO_FETCH_OPTIONS,
+                index = 0,
+                key = "jobs_to_fetch",
+                help = ("How many jobs to get from Adzuna.")
+            )
 
-    with col_type:
-        selected_job_type = st.selectbox(
-            "Job Type",
-            options = JOB_TYPE_OPTIONS,
-            index = 0,
-            key = "selected_job_type",
-            help = "Filters according to requested Job Type"
-        )
-    
-    with col_sort:
-        sort_by = st.selectbox(
-            "Sort By",
-            options = SORT_OPTIONS,
-            index = 0,
-            key = "sort_by"
-        )
+        with col_type:
+            selected_job_type = st.selectbox(
+                "Job Type",
+                options = JOB_TYPE_OPTIONS,
+                index = 0,
+                key = "selected_job_type",
+                help = "Filters according to requested Job Type"
+            )
+        
+        with col_sort:
+            sort_by = st.selectbox(
+                "Sort By",
+                options = SORT_OPTIONS,
+                index = 0,
+                key = "sort_by"
+            )
 
-    with col_age:
-        max_age_label = st.selectbox(
-            "Posted Within",
-            options = list(MAX_AGE_OPTIONS.keys()),
-            index = 0,
-            key = "max_age_label"
-        )
+        with col_age:
+            max_age_label = st.selectbox(
+                "Posted Within",
+                options = list(MAX_AGE_OPTIONS.keys()),
+                index = 0,
+                key = "max_age_label"
+            )
 
     search_clicked = st.button(
         "🔍 Search Jobs",
@@ -483,7 +483,7 @@ def render():
             st.info("Please try changing Job Type filter ")
         else:
             # Render each job as a collapsible card
-            for i, job in enumerate(results):
+            for i, job in enumerate(filtered_results):
                 _render_job_card(i, job)
 
 

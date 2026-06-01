@@ -188,6 +188,18 @@ def render():
                         selected_row.to_frame(name="Details"),
                         width="stretch",
                     )
+                    job_description = selected_row.get("Job Description", "")
+                    if job_description:
+                        st.subheader("Stored Job Description")
+                        st.text_area(
+                            "Job Description",
+                            value = job_description,
+                            height = 250,
+                            disabled = True,
+                            key = f"stored_job_description_{int(row_index)}"
+                        )
+                    else:
+                        st.info("No job description saved for this job yet.")
 
             new_status = st.selectbox(
                 "New Status",

@@ -400,6 +400,7 @@ def render():
             snap_salary     = st.session_state.get("_snap_salary", "")
             snap_closing    = st.session_state.get("_snap_closing", date.today())
             snap_notes      = st.session_state.get("_snap_notes", "")
+            
 
             # Validate required fields before writing to Excel
             if not snap_title or not snap_company:
@@ -423,6 +424,7 @@ def render():
                     salary=snap_salary,
                     sponsorship=snap_sponsorship,
                     notes=snap_notes,
+                    job_description = snap_jd
                 )
 
                 # ── Learner Memory Update ─────────────────

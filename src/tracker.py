@@ -28,7 +28,7 @@ COLUMNS = [
     "Job Title", "Company", "Location", "Job Link", "Source", "Closing Date", "Date Found",
     "Date Applied", "Status", "Match Score", "Sponsorship", "Employment Type", "Salary / Rate",
     "Resume Version", "Cover Letter Version", "Contact Person", "Contact Email", "Follow-up Date",
-    "Interview Date", "Notes"
+    "Interview Date", "Notes", "Job Description"
 ]
 
 
@@ -75,7 +75,8 @@ def add_job(
         employment_type: str,
         salary: str,
         sponsorship: str,
-        notes: str
+        notes: str,
+        job_description: str,
 ) -> pd.DataFrame:
     # Takes all details of one job and adds it as a new row in the tracker.
     # Called when the "Save Job" button is clicked in app.py.
@@ -111,6 +112,7 @@ def add_job(
             "Employment Type" : employment_type,
             "Salary / Rate"   : salary,
             "Notes"           : notes,
+            "Job Description" : job_description
         }
     )
 

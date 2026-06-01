@@ -86,10 +86,10 @@ def search_jobs(
         params["max_days_old"] = max_age_days
 
     # Convert UI labels to Adzuna sort values
-    if sort_by == 'date':
+    if sort_by == 'Date':
         params["sort_by"] = "date"
 
-    elif sort_by == "salary":
+    elif sort_by == "Salary":
         params["sort_by"] = "salary"
 
     try:
