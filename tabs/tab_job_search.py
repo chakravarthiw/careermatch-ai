@@ -1,10 +1,11 @@
 # tabs/tab_job_search.py
 # ─────────────────────────────────────────────────────────────
 # Job Search Tab — CareerMatch AI
+# ─────────────────────────────────────────────────────────────
 #
 # What this file does:
 #   Renders the Job Search tab which allows the user to search
-#   for Australian jobs via the Adzuna API. Results are shown
+#   for jobs via the Adzuna API. Results are shown
 #   as expandable cards with sponsorship badges, salary info,
 #   and a description preview. Jobs can be sent directly to
 #   the Add Job tab with one click.
@@ -36,11 +37,48 @@
 #   sponsorship detection or closing date extraction.
 #   Users should click "View Job" to read the full listing
 #   and paste the full description into the Add Job tab.
+
+# Simple explaination:
+# User enters:
+#     1. Job title
+#     2. Location
+#     3. filters - if wanted
+
+# Then this tab:
+#     1. Calls search_jobs()
+#     2. Shows job results as cards
+#     3. Lets user send jobs to Add Job tab
+#     4. Gives links to SEEK, Linkdin etc.
 # ─────────────────────────────────────────────────────────────
 
 import streamlit as st
-
+import urllib.parse
 from src.job_search import search_jobs
+
+
+# FILTER OPTIONS: Dropdown options shown to user
+
+JOB_TYPE_OPTIONS = [
+    "Any",
+    "Full-time",
+    "Part-time",
+    "Contract"
+]
+
+SORT_OPTIONS = [
+    "Relevance",
+    "Date",
+    "Salary"
+]
+
+MAX_AGE_OPTIONS = {
+    "Any"           : None,
+    "Last 7 Days"   : 7,
+    "Last 14 Days"  : 14,
+    "Last 30 Days"  : 30
+}
+
+JOBS_TO_FETCH_OPTIONS = [10, 15, 50 ]
 
 
 def _get_sponsorship_badge(sponsorship: str) -> str:
@@ -63,6 +101,8 @@ def _get_salary_display(sal_min, sal_max) -> str:
     # Adzuna returns None for both fields if salary not listed.
     # Input : sal_min, sal_max — numeric or None
     # Output: formatted salary string or "Salary not listed"
+    # Example:
+    #     70000 and 90000 becomes "$70,000 – $90,000"
 
     if sal_min and sal_max:
         return f"${sal_min:,.0f} – ${sal_max:,.0f}"
@@ -72,6 +112,18 @@ def _get_salary_display(sal_min, sal_max) -> str:
         return f"Up to ${sal_max:,.0f}"
     else:
         return "Salary not listed"
+    
+
+def apply_job_type_filter(results: list, job_type: str) -> list:
+    # Filter job by employment type
+    # Adzuna job type data is not reliable, we check contract_type, title and description ourself
+
+    # If user selected "Any" - no filtering needed
+    if job_type == "Any":
+        return results
+    
+    return[job for job in results
+           if job.get("employment_type")== selected_job_type]
 
 
 def _render_job_card(i: int, job: dict):
@@ -97,17 +149,22 @@ def _render_job_card(i: int, job: dict):
     # ─────────────────────────────────────────────────────────
 
     sponsorship     = job.get("sponsorship", "Unknown")
-    badge           = _get_sponsorship_badge(sponsorship)
+    sponsorship_badge           = _get_sponsorship_badge(sponsorship)
     salary_display  = _get_salary_display(
         job.get("salary_min"),
         job.get("salary_max")
+    )
+
+    employment_type = (
+        job.get("employment_type")
+        or "Not Listed"
     )
 
     # Check if this card was already added this session
     already_added   = i in st.session_state.get("added_jobs", set())
 
     # Show checkmark in title if already added
-    title_badge     = "✅ Added" if already_added else badge
+    title_badge     = "✅ Added" if already_added else sponsorship_badge
 
     # ── Expander Title ────────────────────────────────────────
     # Title format: [badge] | [Job Title] — [Company] | [Location]
@@ -126,7 +183,7 @@ def _render_job_card(i: int, job: dict):
             st.markdown(f"**Company:** {job.get('company', '—')}")
             st.markdown(f"**Location:** {job.get('location', '—')}")
             st.markdown(f"**Salary:** {salary_display}")
-            st.markdown(f"**Sponsorship:** {badge}")
+            st.markdown(f"**Sponsorship:** {sponsorship_badge}")
 
             # ── Description Preview ───────────────────────────
             # Adzuna caps at 500 chars so we show up to 300.
@@ -186,6 +243,9 @@ def _render_job_card(i: int, job: dict):
                 )
                 st.session_state["_job_link_input"]       = job.get("link", "")
 
+                st.session_state["_employment_input"]       = (job.get("employment_type")
+                                                               or "Full-time" )
+
                 # Pass truncated description as a starting point.
                 # User should replace with the full description.
                 st.session_state["job_description_input"] = job.get("description", "")
@@ -197,6 +257,53 @@ def _render_job_card(i: int, job: dict):
                     "✅ Details sent to **➕ Add Job** tab — "
                     "switch tabs to review and save."
                 )
+
+
+# EXTERNAL SEARCH LINKS
+
+# Shortcut buttons to external job boards
+# Just clickable search links
+
+def render_external_search_links(keyword: str, location: str):
+    if not keyword:
+        return    
+    
+    st.divider()
+
+    st.subheader("🔎 Also search on")
+    st.caption("Please click below to open, Seek, Linkdin")
+
+    q_keyword = urllib.parse.quote_plus(keyword)
+    q_location = urllib.parse.quote_plus(location or "Australia")
+
+    platforms = [
+        (
+            "Google Search Results",
+            "🔍",
+            f"https://www.google.com/search?q={q_keyword}+jobs+{q_location}&ibp=htl;jobs",
+        ),
+        (
+            "SEEK",
+            "🟢",
+            f"https://www.seek.com.au/{q_keyword}-jobs/in-{q_location}"
+        ),
+        (
+            "Linkdin",
+            "🔵",
+            "https://www.linkdin.com/jobs/search/?"
+            + urllib.parse.urlencode(
+                {
+                    "keywords"  : keyword,
+                    "location"  : location or "Australia"
+                }
+            ),
+        ),
+    ]
+
+    columns = st.columns(len(platforms))
+    for column, (label,emoji,url) in zip(columns,platforms):
+        with column:
+            st.link_button(f"{emoji} {label}", url=url,width="stretch" )
 
 
 def render():
@@ -262,6 +369,47 @@ def render():
             ),
         )
 
+
+    # ─────────────────────────────────────────────────────────
+    # ADVANCED FILTERS
+    # ─────────────────────────────────────────────────────────
+    with st.expander("⚙️ Advanced Filters", expanded = False):
+        col_fetch, col_type, col_sort, col_age = st.columns(4)
+    
+    with col_fetch:
+        jobs_to_fetch = st.selectbox(
+            "Jobs to Fetch",
+            options = JOBS_TO_FETCH_OPTIONS,
+            index = 0,
+            key = "jobs_to_fetch",
+            help = ("How many jobs to get from Adzuna.")
+        )
+
+    with col_type:
+        selected_job_type = st.selectbox(
+            "Job Type",
+            options = JOB_TYPE_OPTIONS,
+            index = 0,
+            key = "selected_job_type",
+            help = "Filters according to requested Job Type"
+        )
+    
+    with col_sort:
+        sort_by = st.selectbox(
+            "Sort By",
+            options = SORT_OPTIONS,
+            index = 0,
+            key = "sort_by"
+        )
+
+    with col_age:
+        max_age_label = st.selectbox(
+            "Posted Within",
+            options = list(MAX_AGE_OPTIONS.keys()),
+            index = 0,
+            key = "max_age_label"
+        )
+
     search_clicked = st.button(
         "🔍 Search Jobs",
         width="stretch",
@@ -275,14 +423,18 @@ def render():
         if not search_keyword:
             st.warning("Please enter a job title or keyword.")
         else:
+            max_age_days = MAX_AGE_OPTIONS[max_age_label]
             with st.spinner(
                 f"Searching for **{search_keyword}** "
                 f"jobs in **{search_location}**..."
             ):
                 results = search_jobs(
-                    keyword=search_keyword,
-                    location=search_location,
-                    sponsorship_priority=sponsorship_priority,
+                    keyword                 = search_keyword,
+                    location                = search_location,
+                    sponsorship_priority    = sponsorship_priority,
+                    jobs_to_fetch           = jobs_to_fetch,
+                    sort_by                 = sort_by,
+                    max_age_days            = max_age_days
                 )
 
             # Store results and search terms for display
@@ -306,15 +458,41 @@ def render():
     results = st.session_state.get("search_results", [])
 
     if results:
+        filtered_results = apply_job_type_filter(results, st.session_state.get("selected_job_type", "Any"))
+
         st.divider()
+
+        hidden_count = len(results) - len(filtered_results)
+
+        filter_note = (
+            f" ({hidden_count} hidden by job type filter)"
+            if hidden_count > 0
+            else ""
+        )
+        
 
         # Show result count and search terms as context
         st.caption(
-            f"Found **{len(results)}** jobs for "
+            f"Found **{len(filtered_results)}** of **{len(results)} jobs for "
             f"**{st.session_state.get('search_keyword_used', '')}** "
             f"in **{st.session_state.get('search_location_used', '')}**"
+            f"{filter_note}"
         )
 
-        # Render each job as a collapsible card
-        for i, job in enumerate(results):
-            _render_job_card(i, job)
+        if not filtered_results:
+            st.info("Please try changing Job Type filter ")
+        else:
+            # Render each job as a collapsible card
+            for i, job in enumerate(results):
+                _render_job_card(i, job)
+
+
+    # ─────────────────────────────────────────────────────────
+    # EXTERNAL SEARCH SHORTCUTS
+    # ─────────────────────────────────────────────────────────
+
+    keyword_used    = st.session_state.get("search_keyword_used", "")
+    location_used   = st.session_state.get("search_location_used", "")
+
+    if keyword_used:
+        render_external_search_links(keyword_used, location_used)     
